@@ -1,0 +1,76 @@
+import unittest
+import os
+import shutil
+from script1 import crear_backup
+from unittest.mock import patch
+import io
+
+class TestBackupSystem(unittest.TestCase):
+    def setUp(self):
+        # Crear directorio temporal para las pruebas
+        self.test_dir = "test_backups"
+        if not os.path.exists(self.test_dir):
+            os.makedirs(self.test_dir)
+            
+    def tearDown(self):
+        # Limpiar archivos de prueba
+        if os.path.exists(self.test_dir):
+            shutil.rmtree(self.test_dir)
+        # Limpiar archivos .txt de prueba
+        for file in os.listdir('.'):
+            if file.startswith('test_') and file.endswith('.txt'):
+                os.remove(file)
+                
+    def test_crear_nota(self):
+        # Simular entrada del usuario para crear una nota
+        test_input = ['1', 'test_nota', 'Esta es una prueba', '', '', '4']
+        expected_file = 'test_nota.txt'
+        
+        with patch('builtins.input', side_effect=test_input):
+            crear_backup()
+            
+        # Verificar que el archivo se creó
+        self.assertTrue(os.path.exists(expected_file))
+        
+        # Verificar el contenido
+        with open(expected_file, 'r', encoding='utf-8') as f:
+            content = f.read().strip()
+        self.assertEqual(content, 'Esta es una prueba')
+        
+    def test_hacer_backup(self):
+        # Crear un archivo de prueba
+        test_file = 'test_backup.txt'
+        with open(test_file, 'w', encoding='utf-8') as f:
+            f.write('Contenido de prueba')
+            
+        # Simular entrada del usuario para hacer backup
+        test_input = ['2', '1', '4']
+        
+        with patch('builtins.input', side_effect=test_input):
+            crear_backup()
+            
+        # Verificar que existe al menos un archivo en la carpeta backups
+        self.assertTrue(any(os.listdir('backups')))
+        
+    def test_ver_notas(self):
+        # Crear algunos archivos de prueba
+        test_files = ['test1.txt', 'test2.txt']
+        for file in test_files:
+            with open(file, 'w', encoding='utf-8') as f:
+                f.write('Contenido de prueba')
+                
+        # Simular entrada del usuario para ver notas
+        test_input = ['3', '4']
+        
+        # Capturar la salida
+        with patch('builtins.input', side_effect=test_input), \
+             patch('sys.stdout', new=io.StringIO()) as fake_output:
+            crear_backup()
+            
+        # Verificar que la salida contiene los nombres de los archivos
+        output = fake_output.getvalue()
+        for file in test_files:
+            self.assertIn(file, output)
+
+if __name__ == '__main__':
+    unittest.main()
