@@ -1,0 +1,84 @@
+import os
+from datetime import datetime
+import shutil
+
+def crear_backup():
+    # Crear carpeta de backups si no existe
+    if not os.path.exists("backups"):
+        os.makedirs("backups")
+    
+    while True:
+        print("\n=== SISTEMA DE BACKUP DE NOTAS ===")
+        print("1. Crear nueva nota")
+        print("2. Hacer backup de una nota existente")
+        print("3. Ver notas guardadas")
+        print("4. Salir")
+        
+        opcion = input("\nSeleccione una opción: ")
+        
+        if opcion == "1":
+            # Crear nueva nota
+            nombre_archivo = input("Nombre para la nota: ").strip()
+            if not nombre_archivo.endswith('.txt'):
+                nombre_archivo += '.txt'
+            
+            print("Escribe tu nota (presiona Enter dos veces para terminar):")
+            contenido = []
+            while True:
+                linea = input()
+                if linea == "" and (len(contenido) == 0 or contenido[-1] == ""):
+                    break
+                contenido.append(linea)
+            
+            # Guardar la nota
+            with open(nombre_archivo, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(contenido))
+            print(f"\nNota guardada como {nombre_archivo}")
+            
+        elif opcion == "2":
+            # Hacer backup de nota existente
+            archivos = [f for f in os.listdir('.') if f.endswith('.txt')]
+            if not archivos:
+                print("No hay archivos de texto para hacer backup")
+                continue
+                
+            print("\nArchivos disponibles:")
+            for i, archivo in enumerate(archivos, 1):
+                print(f"{i}. {archivo}")
+            
+            try:
+                seleccion = int(input("\nSeleccione el número del archivo: ")) - 1
+                if 0 <= seleccion < len(archivos):
+                    archivo_original = archivos[seleccion]
+                    # Crear nombre para el backup con fecha y hora
+                    fecha_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    archivo_backup = f"backups/{os.path.splitext(archivo_original)[0]}_{fecha_hora}.txt"
+                    
+                    # Copiar archivo
+                    shutil.copy2(archivo_original, archivo_backup)
+                    print(f"\nBackup creado: {archivo_backup}")
+                else:
+                    print("Número inválido")
+            except ValueError:
+                print("Por favor, ingrese un número válido")
+                
+        elif opcion == "3":
+            # Ver notas guardadas
+            print("\nNotas originales:")
+            archivos = [f for f in os.listdir('.') if f.endswith('.txt')]
+            for archivo in archivos:
+                print(f"- {archivo}")
+                
+            print("\nBackups:")
+            backups = [f for f in os.listdir('backups') if f.endswith('.txt')]
+            for backup in backups:
+                print(f"- {backup}")
+                
+        elif opcion == "4":
+            print("¡Hasta luego!")
+            break
+        else:
+            print("Opción no válida")
+
+if __name__ == "__main__":
+    crear_backup()
